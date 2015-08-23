@@ -1,0 +1,86 @@
+<html>
+  <head>
+	<script src='https://cdn.firebase.com/js/client/1.0.15/firebase.js'></script>
+	<script src='https://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js'></script>
+	<style type="text/css">
+	 .striked{
+	 	text-decoration: line-through;
+	 }
+	</style>
+  </head>
+  <body onload="welcome()">
+  	<div id="toDoDiv"></div>
+    <input type='text' id='toDoItem' placeholder='Add new ToDo item.'/>
+
+    <!--
+	<div id="toDoDiv"><div id="item0" class="item"><em><input type="checkbox">1: </em>Bring Sabzi</div></div>
+	-->
+
+	<script>
+		console.log("welcome");
+		var myDataRef = new Firebase('https://collabtodo.firebaseio.com/');
+		var length = 0;
+
+		//saving data
+		$('#toDoItem').keypress(function (e) {
+        if (e.keyCode == 13) {
+          var toDoItemText = $('#toDoItem').val();
+          id = length+1;
+          myDataRef.child(id).push({id: id, text: toDoItemText, name: name, done: 0});
+          $("#toDoItem").val('');
+		 }
+	    });
+		
+		myDataRef.on('child_added', function(snapshot) {
+			console.log('child_added');
+			var listItem = snapshot.val();
+			displayToDoList(listItem.id, listItem.text, listItem.name, listItem.done);
+		});
+
+		myDataRef.on('child_changed', function(snapshot) {
+			console.log("child_changed");
+			var listItem = snapshot.val();
+			editToDoList(listItem.id, listItem.text, listItem.name, listItem.done);
+		});
+
+		function displayToDoList(id, text, name, done) {
+	        $('<div id="item'+id+'"/>').text(text).prepend($('<em/>').text(id+': ').prepend($('<input type="checkbox" id="check'+id+'" onclick="clicked('+id+')"/>'))).appendTo($('#toDoDiv'));
+	        $('#toDoDiv')[0].scrollTop = $('#toDoDiv')[0].scrollHeight;
+	        if(done!=0){
+	        	document.getElementById("check"+id).addClass('striked');
+	        }
+	      	length++;
+      	};
+
+		function editToDoList(id, text, name, done) {
+	        if(done!=0){
+	        	document.getElementById("check"+id).addClass('striked');
+	        }
+      	};
+
+      	function clicked(id){
+      		checkbox = document.getElementById("check"+id);
+      		div = $("#item"+id);
+      		if (checkbox.checked) {
+		        div.addClass('striked');
+		        console.log('updating..')
+		        myDataRef.child(id).update({ id: { done: 1 }} );
+		        console.log('updated ?')
+		    } else {
+		        div.removeClass('striked');
+		        //notDone()
+		    }
+      	};
+
+      	function welcome(){
+      		if(!name || name == 'null'){
+      			name = prompt("Your name please: ");
+      			welcome();
+      		}
+      		else{
+      			alert("Welcome : "+name);
+      		}
+      	}
+	</script>
+  </body>
+</html>
